@@ -3,9 +3,8 @@ import { supabase } from '../supabaseClient'
 
 export default function Cliente() {
   const [productos, setProductos] = useState([])
-  
-  // Novedad: Nuestro "interruptor" para saber qué pestaña está activa
   const [vistaActual, setVistaActual] = useState('carta')
+  const [categoriaActiva, setCategoriaActiva] = useState('todos')
 
   useEffect(() => {
     async function fetchProductos() {
@@ -15,68 +14,92 @@ export default function Cliente() {
     fetchProductos()
   }, [])
 
+  const categorias = ['todos', ...new Set(productos.map(p => p.categoria).filter(Boolean))];
+
+  const productosFiltrados = categoriaActiva === 'todos' 
+    ? productos 
+    : productos.filter(p => p.categoria === categoriaActiva);
+
   return (
-    <div className="min-h-screen bg-base-100 font-sans pb-10">
+    <div 
+      className="min-h-screen font-sans pb-10"
+      style={{
+        backgroundImage: "url('/fondo.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        backgroundColor: "#111"
+      }}
+    >
       
-      {/* --- HEADER / NAVBAR ESTILO APP MÓVIL --- */}
-      <div className="navbar bg-base-100 sticky top-0 z-50 border-b border-neutral shadow-sm px-4">
-        
-        {/* Parte izquierda: Logo y Nombre */}
+      <div className="navbar bg-neutral/80 backdrop-blur-lg sticky top-0 z-50 shadow-md px-4 border-b border-gray-800">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <img src="/logo.jpg" alt="La Riviera" className="w-10 h-10 rounded-full object-cover border border-primary" />
-            <span className="text-xl font-bold text-primary tracking-widest uppercase">La Riviera</span>
+            <img src="/logo.jpg" alt="La Riviera" className="w-10 h-10 rounded-full object-cover border border-[#ff9ea2]" />
+            <span className="text-xl font-bold text-[#ff9ea2] tracking-widest uppercase">La Riviera</span>
           </div>
         </div>
         
-        {/* Parte derecha: Menú de navegación */}
-        <div className="flex-none">
-          <ul className="menu menu-horizontal px-1 font-semibold">
-            {/* Botón Carta */}
-            <li>
-              <a 
-                // Operador ternario: Si la vista es 'carta', pintamos el texto de rosa (primary). Si no, gris.
-                className={vistaActual === 'carta' ? 'text-primary' : 'text-base-content opacity-70'}
-                onClick={() => setVistaActual('carta')}
-              >
-                Carta
-              </a>
-            </li>
-            
-            {/* Botón Noticias */}
-            <li>
-              <a 
-                className={vistaActual === 'noticias' ? 'text-primary' : 'text-base-content opacity-70'}
-                onClick={() => setVistaActual('noticias')}
-              >
-                Noticias
-              </a>
-            </li>
-          </ul>
+        <div className="flex flex-none items-center pr-2">
+          <div className="flex bg-base-100/90 rounded-full p-1 border border-gray-800 shadow-inner">
+            <button 
+              className={`px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-300 ${
+                vistaActual === 'carta' ? 'bg-[#ff9ea2] text-black shadow-md' : 'text-gray-400 hover:text-white'
+              }`}
+              onClick={() => setVistaActual('carta')}
+            >
+              Carta
+            </button>
+            <button 
+              className={`px-4 py-1.5 text-sm font-bold rounded-full transition-all duration-300 ${
+                vistaActual === 'noticias' ? 'bg-[#ff9ea2] text-black shadow-md' : 'text-gray-400 hover:text-white'
+              }`}
+              onClick={() => setVistaActual('noticias')}
+            >
+              Eventos
+            </button>
+          </div>
         </div>
       </div>
-      {/* --- FIN DEL HEADER --- */}
 
-
-      {/* --- CONTENIDO DINÁMICO (El Switch) --- */}
-      <div className="p-4 mt-4">
-        
-        {/* SI VISTA ACTUAL ES 'CARTA', RENDERIZAMOS ESTO: */}
+      <main className="max-w-6xl mx-auto">
         {vistaActual === 'carta' && (
           <>
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-base-content mb-2 uppercase">Nuestra Carta</h1>
-              <p className="text-sm text-base-content opacity-60">Escanea, pide y disfruta en la piscina.</p>
+            <div className="sticky top-[64px] z-40 bg-base-100/70 backdrop-blur-md py-4 px-4 overflow-x-auto flex gap-3 no-scrollbar border-b border-gray-800">
+              {categorias.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategoriaActiva(cat)}
+                  className={`px-5 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                    categoriaActiva === cat 
+                      ? 'bg-accent text-black shadow-lg scale-105' 
+                      : 'bg-neutral text-gray-400 border border-gray-700 hover:border-gray-500'
+                  }`}
+                >
+                  {cat === 'todos' ? 'Carta Completa' : cat}
+                </button>
+              ))}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {productos.map((producto) => (
-                <div key={producto.id} className="card bg-neutral shadow-xl border border-gray-800">
-                  <div className="card-body">
-                    <h2 className="card-title text-primary uppercase text-xl">{producto.nombre}</h2>
-                    <p className="text-sm opacity-80">{producto.descripcion}</p>
-                    <div className="card-actions justify-between items-center mt-4">
-                      <span className="text-2xl font-bold">{producto.precio} €</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+              {productosFiltrados.map((producto) => (
+                <div key={producto.id} className="card bg-[#121212] shadow-2xl border border-gray-700 hover:border-[#ff9ea2]/60 transition-all duration-300">
+                  <div className="card-body p-6">
+                    <div className="flex justify-between items-start mb-2">
+                      <h2 className="card-title text-[#ff9ea2] uppercase text-lg font-black leading-tight">
+                        {producto.nombre}
+                      </h2>
+                      <div className="badge badge-outline border-gray-600 text-gray-400 text-[10px] uppercase font-bold">
+                        {producto.categoria}
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-300 leading-relaxed italic">
+                      {producto.descripcion}
+                    </p>
+                    <div className="flex justify-end mt-6">
+                      <span className="text-2xl font-black text-white bg-black px-4 py-1 rounded-xl border border-gray-700 shadow-inner">
+                        {producto.precio.toFixed(2)}€
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -85,25 +108,16 @@ export default function Cliente() {
           </>
         )}
 
-        {/* SI VISTA ACTUAL ES 'NOTICIAS', RENDERIZAMOS ESTE PLACEHOLDER: */}
         {vistaActual === 'noticias' && (
-          <div className="flex flex-col items-center justify-center mt-10 text-center animate-fade-in">
-            <span className="text-6xl mb-4">🦩</span>
-            <h2 className="text-2xl font-bold text-primary mb-2">Próximos Eventos</h2>
-            <p className="text-base-content opacity-70 max-w-md">
-              Estamos preparando la programación de este verano: clases de aquagym, tardeos con DJ, fiestas temáticas y mucho más.
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-[#121212] m-6 rounded-3xl border border-gray-800">
+            <span className="text-7xl mb-6">🍹</span>
+            <h2 className="text-3xl font-black text-[#ff9ea2] mb-4 uppercase tracking-tighter">Próximos Eventos</h2>
+            <p className="text-gray-300 max-w-sm mb-8">
+              Estamos preparando los mejores tardeos y eventos para este verano en La Riviera. ¡Sigue atento!
             </p>
-            <button 
-              className="btn btn-outline btn-primary mt-6"
-              onClick={() => setVistaActual('carta')}
-            >
-              Volver a la carta
-            </button>
           </div>
         )}
-
-      </div>
-
+      </main>
     </div>
   )
 }
